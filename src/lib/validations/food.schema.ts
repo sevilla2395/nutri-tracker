@@ -14,7 +14,7 @@ export const foodExchangeSchema = z.object({
     .trim(),
   // null = no ingresado; number > 0 = peso válido
   portion_grams: z
-    .number({ invalid_type_error: 'El peso debe ser un número' })
+    .number({ error: 'El peso debe ser un número' })
     .positive('El peso debe ser mayor que 0')
     .nullable(),
   calories: z.number().min(0),
