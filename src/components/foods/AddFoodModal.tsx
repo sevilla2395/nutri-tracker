@@ -164,7 +164,10 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
                 step="0.1"
                 min="0"
                 placeholder="Opcional"
-                {...register('portion_grams')}
+                {...register('portion_grams', {
+                  setValueAs: (v: string) =>
+                    v === '' || v === null || v === undefined ? null : Number(v),
+                })}
               />
             </div>
           </div>
