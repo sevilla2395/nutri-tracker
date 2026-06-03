@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { foodExchangeSchema } from '@/lib/validations/food.schema'
+import { foodExchangeApiSchema } from '@/lib/validations/food.schema'
 import { apiSuccess, apiError } from '@/lib/utils'
 
 export async function PUT(
@@ -17,7 +17,7 @@ export async function PUT(
     if (!foodId) return apiError('ID requerido', 400)
 
     const body = await request.json()
-    const parsed = foodExchangeSchema.safeParse(body)
+    const parsed = foodExchangeApiSchema.safeParse(body)
     if (!parsed.success) {
       return apiError(parsed.error.issues[0].message, 422)
     }

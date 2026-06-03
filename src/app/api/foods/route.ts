@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getFoodsForUser, createFoodExchange, deleteFoodExchange, toggleFoodPreference } from '@/lib/db/foods'
-import { foodExchangeSchema } from '@/lib/validations/food.schema'
+import { foodExchangeApiSchema } from '@/lib/validations/food.schema'
 import { apiSuccess, apiError } from '@/lib/utils'
 
 /**
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!user) return apiError('No autenticado', 401)
 
     const body = await request.json()
-    const parsed = foodExchangeSchema.safeParse(body)
+    const parsed = foodExchangeApiSchema.safeParse(body)
     if (!parsed.success) {
       return apiError(parsed.error.issues[0].message, 422)
     }
