@@ -201,7 +201,7 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
 
         {filtered.map((food) => {
           const active = isActive(food)
-          const catColor = food.food_categories.color_hex
+          const catColor = food.food_categories?.color_hex || '#ccc'
 
           return (
             <div
@@ -229,7 +229,7 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
                       className="text-xs py-0 px-1.5"
                       style={{ borderColor: catColor + '60', color: catColor }}
                     >
-                      {food.food_categories.icon} {food.food_categories.name}
+                      {food.food_categories?.icon} {food.food_categories?.name || 'Desconocido'}
                     </Badge>
                     {!food.is_global && (
                       <Badge variant="secondary" className="text-xs py-0 px-1.5">

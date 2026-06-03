@@ -39,7 +39,7 @@ export async function getPlanWithSlots(planId: string) {
         *,
         meal_slot_requirements (
           *,
-          food_categories ( id, name, color_hex, icon )
+          food_categories ( id, name, color_hex, icon, sort_order )
         )
       )
     `)
@@ -73,7 +73,7 @@ export async function getActivePlan() {
         *,
         meal_slot_requirements (
           *,
-          food_categories ( id, name, color_hex, icon )
+          food_categories ( id, name, color_hex, icon, sort_order )
         )
       )
     `)
@@ -88,7 +88,7 @@ export async function getActivePlan() {
     (data as any).meal_slots.forEach((slot: any) => {
       if (slot.meal_slot_requirements) {
         slot.meal_slot_requirements.sort((a: any, b: any) =>
-          a.food_categories.sort_order - b.food_categories.sort_order
+          (a.food_categories?.sort_order ?? 0) - (b.food_categories?.sort_order ?? 0)
         )
       }
     })
