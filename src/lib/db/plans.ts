@@ -49,8 +49,11 @@ export async function getPlanWithSlots(planId: string) {
 
   if (error) throw new Error(`Error al obtener plan: ${error.message}`)
 
-  // Sort meal slots by display_order
-  if ((data as any)?.meal_slots) {
+  // Normalize and sort meal slots by display_order
+  if ((data as any)?.meal_slots != null) {
+    if (!Array.isArray((data as any).meal_slots)) {
+      (data as any).meal_slots = [(data as any).meal_slots]
+    }
     (data as any).meal_slots.sort((a: any, b: any) => a.display_order - b.display_order)
   }
 
@@ -83,10 +86,17 @@ export async function getActivePlan() {
 
   if (error) throw new Error(`Error al obtener plan activo: ${error.message}`)
 
-  if ((data as any)?.meal_slots) {
+  if ((data as any)?.meal_slots != null) {
+    // Normalize to array (Supabase may return a single object for one-item relations)
+    if (!Array.isArray((data as any).meal_slots)) {
+      (data as any).meal_slots = [(data as any).meal_slots]
+    }
     (data as any).meal_slots.sort((a: any, b: any) => a.display_order - b.display_order)
-    (data as any).meal_slots.forEach((slot: any) => {
-      if (slot.meal_slot_requirements) {
+    ;(data as any).meal_slots.forEach((slot: any) => {
+      if (slot.meal_slot_requirements != null) {
+        if (!Array.isArray(slot.meal_slot_requirements)) {
+          slot.meal_slot_requirements = [slot.meal_slot_requirements]
+        }
         slot.meal_slot_requirements.sort((a: any, b: any) =>
           (a.food_categories?.sort_order ?? 0) - (b.food_categories?.sort_order ?? 0)
         )
