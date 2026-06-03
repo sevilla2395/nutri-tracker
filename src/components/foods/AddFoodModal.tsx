@@ -1,9 +1,9 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { Loader2, X } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { foodExchangeSchema, type FoodExchangeInput } from '@/lib/validations/food.schema'
@@ -39,8 +39,7 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<FoodExchangeInput>({
     resolver: zodResolver(foodExchangeSchema),
@@ -54,10 +53,8 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
       protein_g: initialData?.protein_g ?? 0,
       fat_g: initialData?.fat_g ?? 0,
       fiber_g: initialData?.fiber_g ?? 0,
-    }
+    },
   })
-
-  const selectedCategory = watch('category_id')
 
   const onSubmit = async (data: FoodExchangeInput) => {
     setLoading(true)
@@ -72,17 +69,14 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Error al guardar')
 
-      // Attach category data for display
       const cat = categories.find((c) => c.id === data.category_id)
       onAdded({ ...json.data, food_categories: cat, user_food_preferences: [] })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear alimento')
+      toast.error(err instanceof Error ? err.message : 'Error al guardar alimento')
     } finally {
       setLoading(false)
     }
   }
-
-
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
@@ -90,41 +84,51 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
         <DialogHeader>
           <DialogTitle>{initialData ? 'Editar alimento' : 'Agregar alimento personalizado'}</DialogTitle>
           <DialogDescription>
-            {initialData ? 'Modifica los detalles del alimento' : 'Define la porción y los valores nutricionales por intercambio'}
+            {initialData
+              ? 'Modifica los detalles del alimento'
+              : 'Define la porción y los valores nutricionales por intercambio'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
-          {/* Category */}
+          {/* Category — uses Controller to properly register with RHF */}
           <div className="space-y-2">
             <Label htmlFor="modal-category">Categoría *</Label>
-            <Select
-              onValueChange={(v) => setValue('category_id', v ?? '', { shouldValidate: true })}
-              defaultValue={initialData?.category_id ?? ''}
-              value={selectedCategory}
-            >
-              <SelectTrigger id="modal-category" className={errors.category_id ? 'border-destructive' : ''}>
-                <SelectValue placeholder="Seleccionar categoría...">
-                  {(() => {
-                    const cat = categories.find(c => c.id === selectedCategory)
-                    return cat ? (
-                      <span className="flex items-center gap-2">
-                        {cat.icon} {cat.name}
-                      </span>
-                    ) : undefined
-                  })()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    <span className="flex items-center gap-2">
-                      {cat.icon} {cat.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="category_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id="modal-category"
+                    className={errors.category_id ? 'border-destructive' : ''}
+                  >
+                    <SelectValue placeholder="Seleccionar categoría...">
+                      {(() => {
+                        const cat = categories.find((c) => c.id === field.value)
+                        return cat ? (
+                          <span className="flex items-center gap-2">
+                            {cat.icon} {cat.name}
+                          </span>
+                        ) : undefined
+                      })()}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          {cat.icon} {cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.category_id && (
               <p className="text-xs text-destructive">{errors.category_id.message}</p>
             )}
@@ -169,10 +173,11 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
                     v === '' || v === null || v === undefined ? null : Number(v),
                 })}
               />
+              {errors.portion_grams && (
+                <p className="text-xs text-destructive">{errors.portion_grams.message}</p>
+              )}
             </div>
           </div>
-
-
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
@@ -184,7 +189,13 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
               disabled={loading}
               id="add-food-submit-btn"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (initialData ? 'Guardar cambios' : 'Guardar alimento')}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : initialData ? (
+                'Guardar cambios'
+              ) : (
+                'Guardar alimento'
+              )}
             </Button>
           </div>
         </form>
