@@ -28,11 +28,12 @@ import type { FoodCategory } from '@/types'
 
 interface AddFoodModalProps {
   categories: FoodCategory[]
+  initialData?: any | null
   onClose: () => void
   onAdded: (food: any) => void
 }
 
-export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps) {
+export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddFoodModalProps) {
   const [loading, setLoading] = useState(false)
 
   const {
@@ -44,7 +45,15 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
   } = useForm<FoodExchangeInput>({
     resolver: zodResolver(foodExchangeSchema),
     defaultValues: {
-      calories: 0, carbs_g: 0, protein_g: 0, fat_g: 0, fiber_g: 0,
+      category_id: initialData?.category_id || '',
+      name: initialData?.name || '',
+      portion_amount: initialData?.portion_amount || '',
+      portion_grams: initialData?.portion_grams || null,
+      calories: initialData?.calories || 0,
+      carbs_g: initialData?.carbs_g || 0,
+      protein_g: initialData?.protein_g || 0,
+      fat_g: initialData?.fat_g || 0,
+      fiber_g: initialData?.fiber_g || 0,
     }
   })
 
@@ -53,8 +62,10 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
   const onSubmit = async (data: FoodExchangeInput) => {
     setLoading(true)
     try {
-      const res = await fetch('/api/foods', {
-        method: 'POST',
+      const url = initialData ? `/api/foods/${initialData.id}` : '/api/foods'
+      const method = initialData ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
@@ -77,9 +88,9 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar alimento personalizado</DialogTitle>
+          <DialogTitle>{initialData ? 'Editar alimento' : 'Agregar alimento personalizado'}</DialogTitle>
           <DialogDescription>
-            Define la porción y los valores nutricionales por intercambio
+            {initialData ? 'Modifica los detalles del alimento' : 'Define la porción y los valores nutricionales por intercambio'}
           </DialogDescription>
         </DialogHeader>
 
@@ -160,7 +171,7 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
               disabled={loading}
               id="add-food-submit-btn"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar alimento'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (initialData ? 'Guardar cambios' : 'Guardar alimento')}
             </Button>
           </div>
         </form>

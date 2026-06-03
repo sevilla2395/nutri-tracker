@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import {
-  Plus, Star, Trash2, ChevronRight, Loader2, ClipboardList, Pencil
+  Plus, Star, Trash2, ChevronRight, Loader2, ClipboardList, Pencil, Settings
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -31,6 +31,7 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
   const router = useRouter()
   const [plans, setPlans] = useState(initialPlans)
   const [showCreate, setShowCreate] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<PlanTemplate | null>(null)
   const [loading, setLoading] = useState(false)
   const [activatingId, setActivatingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -39,22 +40,32 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
     resolver: zodResolver(planTemplateSchema),
   })
 
-  const createPlan = async (data: PlanTemplateInput) => {
+  const createOrEditPlan = async (data: PlanTemplateInput) => {
     setLoading(true)
     try {
-      const res = await fetch('/api/plans', {
-        method: 'POST',
+      const url = editingPlan ? `/api/plans/${editingPlan.id}` : '/api/plans'
+      const method = editingPlan ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
-      setPlans((prev) => [json.data, ...prev])
-      toast.success(`Plan "${data.name}" creado`)
+      
+      if (editingPlan) {
+        setPlans((prev) => prev.map((p) => (p.id === editingPlan.id ? { ...p, ...data } : p)))
+        toast.success(`Plan "${data.name}" actualizado`)
+      } else {
+        setPlans((prev) => [json.data, ...prev])
+        toast.success(`Plan "${data.name}" creado`)
+      }
+      
       reset()
       setShowCreate(false)
+      setEditingPlan(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear plan')
+      toast.error(err instanceof Error ? err.message : 'Error al procesar plan')
     } finally {
       setLoading(false)
     }
@@ -106,7 +117,11 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
           </p>
         </div>
         <Button
-          onClick={() => setShowCreate(true)}
+          onClick={() => {
+            reset()
+            setEditingPlan(null)
+            setShowCreate(true)
+          }}
           className="brand-gradient text-white shadow-md shadow-primary/30 hover:opacity-90 gap-2"
           id="create-plan-btn"
         >
@@ -124,7 +139,11 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
             Crea tu primer plan de alimentación para empezar a trackear
           </p>
           <Button
-            onClick={() => setShowCreate(true)}
+            onClick={() => {
+              reset()
+              setEditingPlan(null)
+              setShowCreate(true)
+            }}
             className="brand-gradient text-white hover:opacity-90"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -191,9 +210,24 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
                   className="gap-1.5 text-xs"
                   id={`edit-plan-${plan.id}`}
                 >
-                  <Pencil className="w-3 h-3" />
-                  Editar
+                  <Settings className="w-3 h-3" />
+                  Configurar
                   <ChevronRight className="w-3 h-3" />
+                </Button>
+
+                {/* Edit details */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setEditingPlan(plan)
+                    reset({ name: plan.name, description: plan.description || '' })
+                    setShowCreate(true)
+                  }}
+                  className="text-muted-foreground hover:text-primary h-8 w-8"
+                  id={`edit-plan-details-${plan.id}`}
+                >
+                  <Pencil className="w-4 h-4" />
                 </Button>
 
                 {/* Delete */}
@@ -217,17 +251,22 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
         ))}
       </div>
 
-      {/* Create plan modal */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+      {/* Create/Edit plan modal */}
+      <Dialog open={showCreate} onOpenChange={(open) => {
+        if (!open) {
+          setShowCreate(false)
+          setEditingPlan(null)
+        }
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Crear nuevo plan</DialogTitle>
+            <DialogTitle>{editingPlan ? 'Editar plan' : 'Crear nuevo plan'}</DialogTitle>
             <DialogDescription>
-              Dale un nombre descriptivo, como &quot;Pérdida de peso&quot; o &quot;Mantenimiento&quot;
+              {editingPlan ? 'Modifica el nombre o descripción del plan' : 'Dale un nombre descriptivo, como "Pérdida de peso" o "Mantenimiento"'}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(createPlan)} className="space-y-4 mt-2">
+          <form onSubmit={handleSubmit(createOrEditPlan)} className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label htmlFor="plan-name">Nombre del plan *</Label>
               <Input
@@ -250,7 +289,10 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
             </div>
 
             <div className="flex gap-3">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setShowCreate(false)}>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => {
+                setShowCreate(false)
+                setEditingPlan(null)
+              }}>
                 Cancelar
               </Button>
               <Button
@@ -259,7 +301,7 @@ export function PlansClient({ initialPlans }: PlansClientProps) {
                 disabled={loading}
                 id="create-plan-submit-btn"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crear plan'}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingPlan ? 'Guardar cambios' : 'Crear plan')}
               </Button>
             </div>
           </form>

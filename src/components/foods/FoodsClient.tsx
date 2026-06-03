@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Plus, Search, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Search, Trash2, Pencil } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,7 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editingFood, setEditingFood] = useState<FoodWithPrefs | null>(null)
 
   // Determine active state: check user_food_preferences first, default true
   const isActive = (food: FoodWithPrefs) => {
@@ -101,6 +102,12 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
     setFoods((prev) => [newFood, ...prev])
     toast.success(`"${newFood.name}" agregado`)
     setShowAddModal(false)
+  }
+
+  const handleFoodUpdated = (updatedFood: FoodWithPrefs) => {
+    setFoods((prev) => prev.map((f) => (f.id === updatedFood.id ? updatedFood : f)))
+    toast.success(`"${updatedFood.name}" actualizado`)
+    setEditingFood(null)
   }
 
   // Count active foods per category
@@ -241,28 +248,37 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
                   aria-label={active ? 'Desactivar alimento' : 'Activar alimento'}
                 />
 
-                {/* Delete (own foods only) */}
-                {!food.is_global && (
-                  <button
-                    onClick={() => handleDelete(food)}
-                    className="text-muted-foreground hover:text-destructive transition-colors ml-1"
-                    aria-label="Eliminar alimento"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+                <button
+                  onClick={() => setEditingFood(food)}
+                  className="text-muted-foreground hover:text-primary transition-colors ml-1"
+                  aria-label="Editar alimento"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => handleDelete(food)}
+                  className="text-muted-foreground hover:text-destructive transition-colors ml-1"
+                  aria-label="Eliminar alimento"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Add Food Modal */}
-      {showAddModal && (
+      {/* Add/Edit Food Modal */}
+      {(showAddModal || editingFood) && (
         <AddFoodModal
           categories={categories}
-          onClose={() => setShowAddModal(false)}
-          onAdded={handleFoodAdded}
+          initialData={editingFood}
+          onClose={() => {
+            setShowAddModal(false)
+            setEditingFood(null)
+          }}
+          onAdded={editingFood ? handleFoodUpdated : handleFoodAdded}
         />
       )}
     </div>

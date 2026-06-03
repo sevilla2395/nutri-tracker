@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Settings,
   Leaf,
+  Tags,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -27,6 +28,7 @@ const navItems = [
   { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
   { href: '/foods', label: 'Alimentos', icon: Salad },
   { href: '/plans', label: 'Mis Planes', icon: ClipboardList },
+  { href: '/categories', label: 'Categorías', icon: Tags },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ]
 
