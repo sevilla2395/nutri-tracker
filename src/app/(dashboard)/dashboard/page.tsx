@@ -10,7 +10,38 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  const activePlan = await getActivePlan()
+  let activePlan: Awaited<ReturnType<typeof getActivePlan>> | null = null
+  let fetchError: string | null = null
+
+  try {
+    activePlan = await getActivePlan()
+  } catch (err) {
+    fetchError = err instanceof Error ? err.message : String(err)
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-6">⚠️</div>
+          <h2 className="text-2xl font-bold mb-2 text-destructive">Error al cargar el plan</h2>
+          <p className="text-muted-foreground mb-4 text-sm">
+            Ocurrió un error al obtener tu plan activo. Contacta al administrador con el siguiente mensaje:
+          </p>
+          <pre className="text-xs bg-muted rounded-lg p-4 text-left overflow-auto max-h-48 text-destructive border border-destructive/20">
+            {fetchError}
+          </pre>
+          <Link
+            href="/plans"
+            className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-lg brand-gradient text-white text-sm font-medium shadow-md shadow-primary/30 hover:opacity-90 transition-opacity"
+          >
+            <ClipboardList className="w-4 h-4" />
+            Ir a Mis Planes
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   if (!activePlan) {
     return (
