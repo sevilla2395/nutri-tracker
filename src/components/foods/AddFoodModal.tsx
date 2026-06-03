@@ -103,7 +103,16 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
               value={selectedCategory}
             >
               <SelectTrigger id="modal-category" className={errors.category_id ? 'border-destructive' : ''}>
-                <SelectValue placeholder="Seleccionar categoría..." />
+                <SelectValue placeholder="Seleccionar categoría...">
+                  {(() => {
+                    const cat = categories.find(c => c.id === selectedCategory)
+                    return cat ? (
+                      <span className="flex items-center gap-2">
+                        {cat.icon} {cat.name}
+                      </span>
+                    ) : undefined
+                  })()}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
