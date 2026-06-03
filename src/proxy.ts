@@ -3,12 +3,12 @@ import { createServerClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 
 /**
- * Auth guard middleware.
+ * Auth guard proxy (replaces deprecated middleware.ts).
  * - Refreshes the user's session on every request.
  * - Redirects unauthenticated users from protected routes to /login.
  * - Redirects authenticated users away from /login and /register.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient<Database>(
@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected routes — redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/foods', '/plans', '/settings']
+  const protectedPaths = ['/dashboard', '/foods', '/plans', '/settings', '/categories']
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
 
   if (!user && isProtected) {
