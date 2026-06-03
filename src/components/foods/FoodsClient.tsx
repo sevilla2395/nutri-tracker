@@ -37,7 +37,6 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   // Determine active state: check user_food_preferences first, default true
   const isActive = (food: FoodWithPrefs) => {
@@ -196,7 +195,6 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
         {filtered.map((food) => {
           const active = isActive(food)
           const catColor = food.food_categories.color_hex
-          const expanded = expandedId === food.id
 
           return (
             <div
@@ -235,20 +233,6 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
                   <span className="text-xs text-muted-foreground">{food.portion_amount}</span>
                 </div>
 
-                {/* Calories */}
-                <span className="text-sm font-semibold text-primary hidden sm:block whitespace-nowrap">
-                  {food.calories} kcal
-                </span>
-
-                {/* Expand button */}
-                <button
-                  onClick={() => setExpandedId(expanded ? null : food.id)}
-                  className="text-muted-foreground hover:text-foreground transition-colors ml-1"
-                  aria-label="Ver macros"
-                >
-                  {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-
                 {/* Active toggle */}
                 <Switch
                   id={`toggle-${food.id}`}
@@ -268,28 +252,6 @@ export function FoodsClient({ initialFoods, categories }: FoodsClientProps) {
                   </button>
                 )}
               </div>
-
-              {/* Expanded macros */}
-              {expanded && (
-                <div className="grid grid-cols-4 gap-2 px-4 pb-3 pt-1 border-t border-border">
-                  <div className="text-center p-2 rounded-lg macro-carbs-bg">
-                    <div className="text-xs text-muted-foreground">Carbs</div>
-                    <div className="font-bold text-sm macro-carbs">{food.carbs_g}g</div>
-                  </div>
-                  <div className="text-center p-2 rounded-lg macro-protein-bg">
-                    <div className="text-xs text-muted-foreground">Proteína</div>
-                    <div className="font-bold text-sm macro-protein">{food.protein_g}g</div>
-                  </div>
-                  <div className="text-center p-2 rounded-lg macro-fat-bg">
-                    <div className="text-xs text-muted-foreground">Grasa</div>
-                    <div className="font-bold text-sm macro-fat">{food.fat_g}g</div>
-                  </div>
-                  <div className="text-center p-2 rounded-lg macro-fiber-bg">
-                    <div className="text-xs text-muted-foreground">Fibra</div>
-                    <div className="font-bold text-sm macro-fiber">{food.fiber_g}g</div>
-                  </div>
-                </div>
-              )}
             </div>
           )
         })}

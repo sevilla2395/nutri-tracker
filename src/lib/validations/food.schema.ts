@@ -22,11 +22,11 @@ export const foodExchangeSchema = z.object({
     .positive('El peso debe ser positivo')
     .nullable()
     .optional(),
-  calories: nonNegativeNumber('Calorías'),
-  carbs_g: nonNegativeNumber('Carbohidratos'),
-  protein_g: nonNegativeNumber('Proteínas'),
-  fat_g: nonNegativeNumber('Grasas'),
-  fiber_g: nonNegativeNumber('Fibra'),
+  calories: z.number().default(0),
+  carbs_g: z.number().default(0),
+  protein_g: z.number().default(0),
+  fat_g: z.number().default(0),
+  fiber_g: z.number().default(0),
 })
 
 export type FoodExchangeInput = z.infer<typeof foodExchangeSchema>

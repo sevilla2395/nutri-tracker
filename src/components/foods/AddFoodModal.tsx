@@ -45,7 +45,7 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
     resolver: zodResolver(foodExchangeSchema),
     defaultValues: {
       calories: 0, carbs_g: 0, protein_g: 0, fat_g: 0, fiber_g: 0,
-    },
+    }
   })
 
   const selectedCategory = watch('category_id')
@@ -71,20 +71,7 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
     }
   }
 
-  const macroField = (id: string, label: string, field: keyof FoodExchangeInput) => (
-    <div className="space-y-1">
-      <Label htmlFor={id}>{label} (g)</Label>
-      <Input
-        id={id}
-        type="number"
-        step="0.1"
-        min="0"
-        {...register(field, { valueAsNumber: true })}
-        className={errors[field] ? 'border-destructive' : ''}
-      />
-      {errors[field] && <p className="text-xs text-destructive">{errors[field]?.message}</p>}
-    </div>
-  )
+
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
@@ -161,27 +148,7 @@ export function AddFoodModal({ categories, onClose, onAdded }: AddFoodModalProps
             </div>
           </div>
 
-          {/* Calories */}
-          <div className="space-y-2">
-            <Label htmlFor="modal-calories">Calorías (kcal) *</Label>
-            <Input
-              id="modal-calories"
-              type="number"
-              step="0.1"
-              min="0"
-              {...register('calories', { valueAsNumber: true })}
-              className={errors.calories ? 'border-destructive' : ''}
-            />
-            {errors.calories && <p className="text-xs text-destructive">{errors.calories.message}</p>}
-          </div>
 
-          {/* Macros grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {macroField('modal-carbs', '🟡 Carbohidratos', 'carbs_g')}
-            {macroField('modal-protein', '🔴 Proteínas', 'protein_g')}
-            {macroField('modal-fat', '🟣 Grasas', 'fat_g')}
-            {macroField('modal-fiber', '🟢 Fibra', 'fiber_g')}
-          </div>
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
