@@ -18,10 +18,11 @@ export const foodExchangeSchema = z.object({
     .max(50, 'Descripción de porción muy larga')
     .trim(),
   portion_grams: z
-    .number()
-    .positive('El peso debe ser positivo')
+    .number({ invalid_type_error: 'El peso debe ser un número' })
+    .positive('El peso debe ser mayor que 0')
     .nullable()
-    .optional(),
+    .optional()
+    .transform((v) => (v === undefined ? null : v)),
   calories: z.number(),
   carbs_g: z.number(),
   protein_g: z.number(),

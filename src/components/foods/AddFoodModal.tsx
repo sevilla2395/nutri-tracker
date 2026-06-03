@@ -45,15 +45,15 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
   } = useForm<FoodExchangeInput>({
     resolver: zodResolver(foodExchangeSchema),
     defaultValues: {
-      category_id: initialData?.category_id || '',
-      name: initialData?.name || '',
-      portion_amount: initialData?.portion_amount || '',
-      portion_grams: initialData?.portion_grams || null,
-      calories: initialData?.calories || 0,
-      carbs_g: initialData?.carbs_g || 0,
-      protein_g: initialData?.protein_g || 0,
-      fat_g: initialData?.fat_g || 0,
-      fiber_g: initialData?.fiber_g || 0,
+      category_id: initialData?.category_id ?? '',
+      name: initialData?.name ?? '',
+      portion_amount: initialData?.portion_amount ?? '',
+      portion_grams: initialData?.portion_grams ?? null,
+      calories: initialData?.calories ?? 0,
+      carbs_g: initialData?.carbs_g ?? 0,
+      protein_g: initialData?.protein_g ?? 0,
+      fat_g: initialData?.fat_g ?? 0,
+      fiber_g: initialData?.fiber_g ?? 0,
     }
   })
 
@@ -99,7 +99,8 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
           <div className="space-y-2">
             <Label htmlFor="modal-category">Categoría *</Label>
             <Select
-              onValueChange={(v) => setValue('category_id', v ?? '')}
+              onValueChange={(v) => setValue('category_id', v ?? '', { shouldValidate: true })}
+              defaultValue={initialData?.category_id ?? ''}
               value={selectedCategory}
             >
               <SelectTrigger id="modal-category" className={errors.category_id ? 'border-destructive' : ''}>
@@ -163,7 +164,9 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
                 step="0.1"
                 min="0"
                 placeholder="Opcional"
-                {...register('portion_grams', { valueAsNumber: true })}
+                {...register('portion_grams', {
+                  setValueAs: (v) => (v === '' || v === undefined || isNaN(Number(v)) ? null : Number(v)),
+                })}
               />
             </div>
           </div>
