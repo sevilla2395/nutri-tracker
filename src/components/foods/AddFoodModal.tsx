@@ -164,9 +164,7 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
                 step="0.1"
                 min="0"
                 placeholder="Opcional"
-                {...register('portion_grams', {
-                  setValueAs: (v) => (v === '' || v === undefined || isNaN(Number(v)) ? null : Number(v)),
-                })}
+                {...register('portion_grams')}
               />
             </div>
           </div>
