@@ -1,14 +1,15 @@
 import { z } from 'zod'
 
-// =====================================================
-// Auth schemas
-// =====================================================
+// Username must be alphanumeric + underscores, 3-30 chars
+const usernameRule = z
+  .string()
+  .min(3, 'El usuario debe tener al menos 3 caracteres')
+  .max(30, 'El usuario es muy largo (máx. 30 caracteres)')
+  .regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, números y guiones bajos (_)')
+  .trim()
 
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'El correo es requerido')
-    .email('Correo electrónico inválido'),
+  username: usernameRule,
   password: z
     .string()
     .min(1, 'La contraseña es requerida')
@@ -17,15 +18,7 @@ export const loginSchema = z.object({
 
 export const registerSchema = z
   .object({
-    full_name: z
-      .string()
-      .min(1, 'El nombre es requerido')
-      .max(100, 'El nombre es muy largo')
-      .trim(),
-    email: z
-      .string()
-      .min(1, 'El correo es requerido')
-      .email('Correo electrónico inválido'),
+    username: usernameRule,
     password: z
       .string()
       .min(8, 'La contraseña debe tener al menos 8 caracteres')
@@ -39,3 +32,8 @@ export const registerSchema = z
 
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
+
+/** Converts a username to the internal fake email used with Supabase Auth */
+export function usernameToEmail(username: string): string {
+  return `${username.toLowerCase()}@nutritracker.app`
+}

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 interface TopBarProps {
   user: User
-  profile: { full_name: string | null; role: string } | null
+  profile: { full_name: string | null; username: string | null; role: string } | null
 }
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -25,9 +25,10 @@ export function TopBar({ user, profile }: TopBarProps) {
   )
   const page = pageKey ? pageTitles[pageKey] : { title: 'NutriTracker', subtitle: '' }
 
-  const initials = (profile?.full_name || user.email || 'U')
-    .split(' ')
-    .map((w) => w[0])
+  const displayName = profile?.username || profile?.full_name || user.email?.split('@')[0] || 'U'
+  const initials = displayName
+    .split(/[_\s]/)
+    .map((w: string) => w[0])
     .slice(0, 2)
     .join('')
     .toUpperCase()
@@ -44,7 +45,7 @@ export function TopBar({ user, profile }: TopBarProps) {
       <div className="flex items-center gap-3">
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-sm font-medium leading-none">
-            {profile?.full_name || user.email?.split('@')[0]}
+            {profile?.username || profile?.full_name || user.email?.split('@')[0]}
           </span>
           <span className="text-xs text-muted-foreground capitalize">
             {profile?.role === 'admin' ? 'Administrador' : 'Usuario'}

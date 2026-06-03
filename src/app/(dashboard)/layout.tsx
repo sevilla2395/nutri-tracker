@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   // Fetch user profile for display
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, username, role')
     .eq('id', user.id)
     .single()
 

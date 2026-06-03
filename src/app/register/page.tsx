@@ -4,18 +4,16 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Loader2, Leaf, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { Loader2, Leaf, Eye, EyeOff, User, CheckCircle2 } from 'lucide-react'
 
-import { registerSchema, type RegisterInput } from '@/lib/validations/auth.schema'
+import { registerSchema, type RegisterInput, usernameToEmail } from '@/lib/validations/auth.schema'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -30,21 +28,27 @@ export default function RegisterPage() {
     setLoading(true)
     const supabase = createClient()
 
+    // Convert username to fake internal email for Supabase Auth
+    const fakeEmail = usernameToEmail(data.username)
+
     const { error } = await supabase.auth.signUp({
-      email: data.email,
+      email: fakeEmail,
       password: data.password,
       options: {
-        data: { full_name: data.full_name },
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        // Store username in metadata so the trigger can use it
+        data: { username: data.username },
+        // No email confirmation redirect needed
+        emailRedirectTo: undefined,
       },
     })
 
     if (error) {
-      toast.error(
-        error.message.includes('already registered')
-          ? 'Este correo ya está registrado. Intenta iniciar sesión.'
-          : error.message
-      )
+      if (error.message.toLowerCase().includes('already registered') ||
+          error.message.toLowerCase().includes('already exists')) {
+        toast.error('Ese nombre de usuario ya está en uso. Elige otro.')
+      } else {
+        toast.error(error.message)
+      }
       setLoading(false)
       return
     }
@@ -60,16 +64,16 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <CheckCircle2 className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">¡Revisa tu correo!</h2>
+          <h2 className="text-2xl font-bold mb-2">¡Cuenta creada!</h2>
           <p className="text-muted-foreground text-sm mb-6">
-            Te enviamos un enlace de confirmación. Haz clic en él para activar tu cuenta.
+            Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.
           </p>
           <Link
-              href="/login"
-              className="inline-flex items-center justify-center w-full px-4 py-2 rounded-lg border border-border bg-background text-sm font-medium hover:bg-muted transition-colors"
-            >
-              Ir al inicio de sesión
-            </Link>
+            href="/login"
+            className="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-xl brand-gradient text-white text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
+          >
+            Iniciar sesión
+          </Link>
         </div>
       </div>
     )
@@ -95,36 +99,28 @@ export default function RegisterPage() {
         {/* Card */}
         <div className="glass-card rounded-3xl p-8 shadow-2xl shadow-black/10">
           <h2 className="text-xl font-semibold mb-1">Crear cuenta</h2>
-          <p className="text-sm text-muted-foreground mb-6">Únete gratis y empieza a trackear</p>
+          <p className="text-sm text-muted-foreground mb-6">Elige un nombre de usuario y contraseña</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div className="space-y-2">
-              <Label htmlFor="full_name">Nombre completo</Label>
-              <Input
-                id="full_name"
-                type="text"
-                placeholder="María García"
-                autoComplete="name"
-                {...register('full_name')}
-                className={errors.full_name ? 'border-destructive' : ''}
-              />
-              {errors.full_name && (
-                <p className="text-xs text-destructive">{errors.full_name.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reg-email">Correo electrónico</Label>
-              <Input
-                id="reg-email"
-                type="email"
-                placeholder="tu@correo.com"
-                autoComplete="email"
-                {...register('email')}
-                className={errors.email ? 'border-destructive' : ''}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+              <Label htmlFor="username">Nombre de usuario</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="mi_usuario"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  {...register('username')}
+                  className={`pl-9 ${errors.username ? 'border-destructive' : ''}`}
+                />
+              </div>
+              {errors.username ? (
+                <p className="text-xs text-destructive">{errors.username.message}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Letras, números y guiones bajos. Ej: maria_garcia</p>
               )}
             </div>
 

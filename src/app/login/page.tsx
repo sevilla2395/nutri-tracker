@@ -4,17 +4,16 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { Loader2, Leaf, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Leaf, Eye, EyeOff, User } from 'lucide-react'
 
-import { loginSchema, type LoginInput } from '@/lib/validations/auth.schema'
+import { loginSchema, type LoginInput, usernameToEmail } from '@/lib/validations/auth.schema'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
-import { Suspense } from 'react'
 
 function LoginContent() {
   const router = useRouter()
@@ -34,21 +33,17 @@ function LoginContent() {
     const supabase = createClient()
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
+      email: usernameToEmail(data.username),
       password: data.password,
     })
 
     if (error) {
-      toast.error(
-        error.message.includes('Invalid login')
-          ? 'Correo o contraseña incorrectos'
-          : error.message
-      )
+      toast.error('Usuario o contraseña incorrectos')
       setLoading(false)
       return
     }
 
-    toast.success('¡Bienvenido de vuelta!')
+    toast.success('¡Bienvenido!')
     router.push(redirect)
     router.refresh()
   }
@@ -74,21 +69,26 @@ function LoginContent() {
         {/* Card */}
         <div className="glass-card rounded-3xl p-8 shadow-2xl shadow-black/10">
           <h2 className="text-xl font-semibold mb-1">Iniciar sesión</h2>
-          <p className="text-sm text-muted-foreground mb-6">Ingresa tus credenciales para continuar</p>
+          <p className="text-sm text-muted-foreground mb-6">Ingresa tu usuario y contraseña</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@correo.com"
-                autoComplete="email"
-                {...register('email')}
-                className={errors.email ? 'border-destructive' : ''}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+              <Label htmlFor="username">Nombre de usuario</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="mi_usuario"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  {...register('username')}
+                  className={`pl-9 ${errors.username ? 'border-destructive' : ''}`}
+                />
+              </div>
+              {errors.username && (
+                <p className="text-xs text-destructive">{errors.username.message}</p>
               )}
             </div>
 
@@ -136,10 +136,7 @@ function LoginContent() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             ¿No tienes cuenta?{' '}
-            <Link
-              href="/register"
-              className="text-primary font-medium hover:underline"
-            >
+            <Link href="/register" className="text-primary font-medium hover:underline">
               Regístrate gratis
             </Link>
           </p>
@@ -151,7 +148,11 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen gradient-mesh flex items-center justify-center p-4"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen gradient-mesh flex items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
       <LoginContent />
     </Suspense>
   )

@@ -23,7 +23,7 @@ type ProfileInput = z.infer<typeof profileSchema>
 
 interface SettingsClientProps {
   user: SupabaseUser
-  profile: { full_name: string | null; role: string } | null
+  profile: { full_name: string | null; username: string | null; role: string } | null
 }
 
 export function SettingsClient({ user, profile }: SettingsClientProps) {
@@ -52,8 +52,10 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
     setSaving(false)
   }
 
-  const initials = (profile?.full_name || user.email || 'U')
-    .split(' ')
+  const username = profile?.username || user.email?.split('@')[0] || 'U'
+  const displayName = profile?.full_name || username
+  const initials = username
+    .split(/[_\s]/)
     .map((w) => w[0])
     .slice(0, 2)
     .join('')
@@ -75,12 +77,9 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold text-lg">{profile?.full_name || 'Sin nombre'}</p>
-            <p className="text-muted-foreground text-sm">{user.email}</p>
-            <Badge
-              variant="outline"
-              className="mt-1 text-xs gap-1"
-            >
+            <p className="font-semibold text-lg">{displayName}</p>
+            <p className="text-muted-foreground text-sm font-mono">@{username}</p>
+            <Badge variant="outline" className="mt-1 text-xs gap-1">
               {profile?.role === 'admin' ? (
                 <><Shield className="w-3 h-3" /> Administrador</>
               ) : (
@@ -94,22 +93,27 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
 
         <form onSubmit={handleSubmit(saveProfile)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="settings-name">Nombre completo</Label>
+            <Label htmlFor="settings-username">Nombre de usuario</Label>
+            <Input
+              id="settings-username"
+              value={`@${username}`}
+              disabled
+              className="bg-muted font-mono"
+            />
+            <p className="text-xs text-muted-foreground">El nombre de usuario no puede cambiarse</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="settings-name">Nombre para mostrar (opcional)</Label>
             <Input
               id="settings-name"
               {...register('full_name')}
-              placeholder="Tu nombre"
+              placeholder="Tu nombre real"
               className={errors.full_name ? 'border-destructive' : ''}
             />
             {errors.full_name && (
               <p className="text-xs text-destructive">{errors.full_name.message}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Correo electrónico</Label>
-            <Input value={user.email ?? ''} disabled className="bg-muted" />
-            <p className="text-xs text-muted-foreground">El correo no puede cambiarse desde aquí</p>
           </div>
 
           <Button
@@ -129,18 +133,16 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
         <h3 className="font-semibold">Información de cuenta</h3>
         <div className="text-sm space-y-2 text-muted-foreground">
           <div className="flex justify-between">
-            <span>ID de usuario</span>
+            <span>Nombre de usuario</span>
+            <span className="font-mono text-foreground">@{username}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Rol</span>
+            <span className="capitalize">{profile?.role === 'admin' ? 'Administrador' : 'Usuario'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>ID de cuenta</span>
             <span className="font-mono text-xs">{user.id.slice(0, 8)}...</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Proveedor</span>
-            <span className="capitalize">{user.app_metadata?.provider ?? 'email'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Estado del correo</span>
-            <Badge variant={user.email_confirmed_at ? 'outline' : 'destructive'} className="text-xs py-0">
-              {user.email_confirmed_at ? '✓ Confirmado' : 'Sin confirmar'}
-            </Badge>
           </div>
         </div>
       </div>
