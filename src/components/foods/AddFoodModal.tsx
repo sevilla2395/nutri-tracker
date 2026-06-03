@@ -57,6 +57,7 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
   })
 
   const onSubmit = async (data: FoodExchangeInput) => {
+    console.log('[AddFoodModal] submitting data:', JSON.stringify(data, null, 2))
     setLoading(true)
     try {
       const url = initialData ? `/api/foods/${initialData.id}` : '/api/foods'
@@ -67,6 +68,7 @@ export function AddFoodModal({ categories, initialData, onClose, onAdded }: AddF
         body: JSON.stringify(data),
       })
       const json = await res.json()
+      console.log('[AddFoodModal] response:', res.status, json)
       if (!res.ok) throw new Error(json.error || 'Error al guardar')
 
       const cat = categories.find((c) => c.id === data.category_id)
